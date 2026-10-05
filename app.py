@@ -760,7 +760,7 @@ with tab5:
     st.subheader("⏰ Volume, Hour & Day Simulation")
 
     max_dots_5 = st.slider(
-        "Max Orders to Animate (Tab 5)", 10, 100, 30, step=10, key="max_dots_t5"
+        "Max Orders to Animate (Tab 5)", 10, 1000, 30, step=10, key="max_dots_t5"
     )
     sim_df_5 = filtered_df.head(max_dots_5).copy().reset_index(drop=True)
 
