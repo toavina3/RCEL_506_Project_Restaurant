@@ -472,23 +472,21 @@ with tab2:
 with tab3:
     st.subheader("Multivariate Machine Learning Model (Feature Importance)")
     df_ml = filtered_df.copy()
-    df_ml = pd.get_dummies(
-        df_ml, columns=["orderType.label", "day_of_week"], drop_first=True
+    df_ml["day_of_week_encoded"] = (
+        df_ml["day_of_week"].astype("category").cat.codes
     )
-
+    df_ml["orderType_encoded"] = (
+        df_ml["orderType.label"].astype("category").cat.codes
+    )
+    
     features = [
-        c
-        for c in df_ml.columns
-        if c
-        in [
-            "order_volume",
-            "employee_count",
-            "num_items",
-            "num_modifiers",
-            "hour",
-        ]
-        or c.startswith("orderType.label_")
-        or c.startswith("day_of_week_")
+        "order_volume",
+        "employee_count",
+        "num_items",
+        "num_modifiers",
+        "hour",
+        "day_of_week_encoded",
+        "orderType_encoded",
     ]
 
     if len(df_ml) > 10 and len(features) > 0:
@@ -559,13 +557,15 @@ with tab3:
         if "hour" in input_dict:
             input_dict["hour"] = [sim_hour]
 
-        day_col = f"day_of_week_{sim_day}"
-        if day_col in input_dict:
-            input_dict[day_col] = [1]
-
-        type_col = f"orderType.label_{sim_type}"
-        if type_col in input_dict:
-            input_dict[type_col] = [1]
+        day_cats = list(filtered_df["day_of_week"].astype("category").cat.categories)
+        type_cats = list(filtered_df["orderType.label"].astype("category").cat.categories)
+        
+        input_dict["day_of_week_encoded"] = [
+            day_cats.index(sim_day) if sim_day in day_cats else 0
+        ]
+        input_dict["orderType_encoded"] = [
+            type_cats.index(sim_type) if sim_type in type_cats else 0
+        ]
 
         input_df = pd.DataFrame(input_dict)[features]
         predicted_time = rf.predict(input_df)[0]
