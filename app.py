@@ -635,3 +635,167 @@ with tab3:
         )
     else:
         st.info("Not enough data points after filtering to fit the model.")
+
+
+# ------------------------------------------------------------------------------
+# TAB 4: RESTAURANT FLOOR SIMULATION (MOVING DOTS)
+# ------------------------------------------------------------------------------
+with tab4:
+    st.subheader("🏃 Restaurant Floor Plan Simulation (Moving Order Dots)")
+    st.caption(
+        "Simulates order flow across restaurant stations (Counter → Kitchen →"
+        " Packaging → Pickup). Dots move at a speed inversely proportional to"
+        " processing time (faster speed = shorter processing time)."
+    )
+
+    max_dots = st.slider("Max Orders to Animate", 10, 100, 30, step=10)
+    sim_df = filtered_df.head(max_dots).copy().reset_index(drop=True)
+
+    if sim_df.empty:
+        st.info("No orders to display based on current filter selection.")
+    else:
+        num_frames = 30
+        frame_rows = []
+
+        # Station coordinates on 100x100 layout grid
+        station_coords = np.array(
+            [[15, 20], [50, 80], [85, 50], [50, 15]]  # Counter  # Kitchen
+        )  # Packaging  # Pickup
+
+        for idx, row in sim_df.iterrows():
+            proc_time = max(float(row["processing_time_min"]), 0.5)
+            # Velocity is inversely proportional to processing time
+            speed_factor = 1.0 / proc_time
+            order_id = str(row["id_x"])[:8]
+            order_type = str(row["orderType.label"])
+
+            for f in range(num_frames):
+                progress = min(1.0, f * speed_factor * 3.0)
+                scaled_p = progress * 3.0
+                seg_idx = int(np.floor(scaled_p))
+
+                if seg_idx >= 3:
+                    curr_x, curr_y = station_coords[3]
+                    status = "Completed / Picked Up"
+                else:
+                    t_seg = scaled_p - seg_idx
+                    p_start = station_coords[seg_idx]
+                    p_end = station_coords[seg_idx + 1]
+                    curr_x = p_start[0] + t_seg * (p_end[0] - p_start[0])
+                    curr_y = p_start[1] + t_seg * (p_end[1] - p_start[1])
+                    station_names = [
+                        "Order Counter",
+                        "Kitchen Prep",
+                        "Packaging",
+                        "Pickup",
+                    ]
+                    status = (
+                        f"Moving: {station_names[seg_idx]} →"
+                        f" {station_names[seg_idx+1]}"
+                    )
+
+                jitter_x = (hash(f"{order_id}_x") % 10 - 5) * 0.4
+                jitter_y = (hash(f"{order_id}_y") % 10 - 5) * 0.4
+
+                frame_rows.append({
+                    "frame": f,
+                    "order_id": f"Order #{order_id}",
+                    "x": curr_x + jitter_x,
+                    "y": curr_y + jitter_y,
+                    "processing_time_min": proc_time,
+                    "order_type": order_type,
+                    "status": status,
+                })
+
+        anim_df = pd.DataFrame(frame_rows)
+
+        fig_sim = px.scatter(
+            anim_df,
+            x="x",
+            y="y",
+            animation_frame="frame",
+            animation_group="order_id",
+            color="order_type",
+            size="processing_time_min",
+            hover_name="order_id",
+            hover_data=["processing_time_min", "status"],
+            range_x=[0, 100],
+            range_y=[0, 100],
+            title="Live Order Trajectory across Restaurant Floor",
+        )
+
+        fig_sim.update_layout(
+            xaxis=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(showgrid=False, zeroline=False, visible=False),
+            height=550,
+            shapes=[
+                dict(
+                    type="rect",
+                    x0=5,
+                    y0=10,
+                    x1=25,
+                    y1=30,
+                    fillcolor="rgba(100, 149, 237, 0.2)",
+                    line=dict(color="RoyalBlue"),
+                ),
+                dict(
+                    type="rect",
+                    x0=35,
+                    y0=65,
+                    x1=65,
+                    y1=95,
+                    fillcolor="rgba(255, 165, 0, 0.2)",
+                    line=dict(color="Orange"),
+                ),
+                dict(
+                    type="rect",
+                    x0=75,
+                    y0=35,
+                    x1=95,
+                    y1=65,
+                    fillcolor="rgba(147, 112, 219, 0.2)",
+                    line=dict(color="Purple"),
+                ),
+                dict(
+                    type="rect",
+                    x0=35,
+                    y0=5,
+                    x1=65,
+                    y1=25,
+                    fillcolor="rgba(60, 179, 113, 0.2)",
+                    line=dict(color="MediumSeaGreen"),
+                ),
+            ],
+            annotations=[
+                dict(
+                    x=15,
+                    y=20,
+                    text="<b>1. Order Counter</b>",
+                    showarrow=False,
+                    font=dict(size=12, color="blue"),
+                ),
+                dict(
+                    x=50,
+                    y=80,
+                    text="<b>2. Kitchen Prep</b>",
+                    showarrow=False,
+                    font=dict(size=12, color="darkorange"),
+                ),
+                dict(
+                    x=85,
+                    y=50,
+                    text="<b>3. Packaging</b>",
+                    showarrow=False,
+                    font=dict(size=12, color="purple"),
+                ),
+                dict(
+                    x=50,
+                    y=15,
+                    text="<b>4. Pickup Area</b>",
+                    showarrow=False,
+                    font=dict(size=12, color="green"),
+                ),
+            ],
+        )
+
+        st.plotly_chart(fig_sim, use_container_width=True)
