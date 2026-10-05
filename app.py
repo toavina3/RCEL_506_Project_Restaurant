@@ -606,6 +606,10 @@ with tab4:
             items = int(row["num_items"])
             modifiers = int(row["num_modifiers"])
             order_type = str(row["orderType.label"])
+            vol = int(row["order_volume"])
+            emp = int(row["employee_count"])
+            hr = int(row["hour"])
+            day = str(row["day_of_week"])
 
             for f in range(num_frames):
                 progress = min(1.0, f * speed_factor * 3.0)
@@ -644,6 +648,10 @@ with tab4:
                     "num_items": items,
                     "num_modifiers": modifiers,
                     "order_type": order_type,
+                    "order_volume": vol,
+                    "employee_count": emp,
+                    "hour": hr,
+                    "day_of_week": day,
                     "status": status,
                 })
 
@@ -665,6 +673,10 @@ with tab4:
                 "num_items",
                 "num_modifiers",
                 "order_type",
+                "order_volume",
+                "employee_count",
+                "hour",
+                "day_of_week",
                 "status",
             ],
             range_x=[0, 100],
@@ -778,6 +790,10 @@ with tab5:
             vol = int(row["order_volume"])
             hr = int(row["hour"])
             day = str(row["day_of_week"])
+            emp = int(row["employee_count"])
+            items = int(row["num_items"])
+            modifiers = int(row["num_modifiers"])
+            order_type = str(row["orderType.label"])
 
             for f in range(num_frames):
                 progress = min(1.0, f * speed_factor * 3.0)
@@ -816,6 +832,10 @@ with tab5:
                     "order_volume": vol,
                     "hour": hr,
                     "day_of_week": day,
+                    "employee_count": emp,
+                    "num_items": items,
+                    "num_modifiers": modifiers,
+                    "order_type": order_type,
                     "status": status,
                 })
 
@@ -837,6 +857,10 @@ with tab5:
                 "order_volume",
                 "hour",
                 "day_of_week",
+                "employee_count",
+                "num_items",
+                "num_modifiers",
+                "order_type",
                 "status",
             ],
             range_x=[0, 100],
