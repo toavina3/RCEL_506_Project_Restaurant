@@ -578,36 +578,50 @@ with tab3:
         )
 
 # ------------------------------------------------------------------------------
-# TAB 4: RESTAURANT FLOOR SIMULATION (MOVING DOTS)
+# TAB 4: RESTAURANT FLOOR SIMULATION (MULTI-VARIABLE MOVING DOTS)
 # ------------------------------------------------------------------------------
 with tab4:
-    st.subheader("🏃 Restaurant Floor Plan Simulation (Moving Order Dots)")
-    st.caption(
-        "Simulates order flow across restaurant stations (Counter → Kitchen →"
-        " Packaging → Pickup). Dots move at a speed inversely proportional to"
-        " processing time (faster speed = shorter processing time)."
+    st.subheader("🏃 Restaurant Floor Plan Simulation")
+
+    current_day = (
+        filtered_df["day_of_week"].iloc[0] if not filtered_df.empty else "N/A"
+    )
+    current_hour = (
+        int(filtered_df["hour"].mean()) if not filtered_df.empty else 12
+    )
+    avg_emp = (
+        int(filtered_df["employee_count"].mean())
+        if not filtered_df.empty
+        else 0
+    )
+    total_vol = len(filtered_df)
+
+    st.info(
+        f"📅 **Day:** {current_day} | ⏰ **Hour:** {current_hour}:00 | 👥"
+        f" **Working Employees:** {avg_emp} | 📊 **Total Order Volume:**"
+        f" {total_vol} orders"
     )
 
-    max_dots = st.slider("Max Orders to Animate", 10, 100, 30, step=10)
+    max_dots = st.slider("Max Orders to Animate simultaneously", 10, 100, 30, step=10)
     sim_df = filtered_df.head(max_dots).copy().reset_index(drop=True)
 
     if sim_df.empty:
-        st.info("No orders to display based on current filter selection.")
+        st.warning("No orders to display based on current filter selection.")
     else:
         num_frames = 30
         frame_rows = []
 
-        # Station coordinates on 100x100 layout grid
         station_coords = np.array(
             [[15, 20], [50, 80], [85, 50], [50, 15]]  # Counter  # Kitchen
         )  # Packaging  # Pickup
 
         for idx, row in sim_df.iterrows():
             proc_time = max(float(row["processing_time_min"]), 0.5)
-            # Velocity is inversely proportional to processing time
+            # Velocity inversely proportional to processing time
             speed_factor = 1.0 / proc_time
             order_id = str(row["id_x"])[:8]
-            order_type = str(row["orderType.label"])
+            items = int(row["num_items"])
+            modifiers = int(row["num_modifiers"])
 
             for f in range(num_frames):
                 progress = min(1.0, f * speed_factor * 3.0)
@@ -643,7 +657,8 @@ with tab4:
                     "x": curr_x + jitter_x,
                     "y": curr_y + jitter_y,
                     "processing_time_min": proc_time,
-                    "order_type": order_type,
+                    "num_items": items,
+                    "num_modifiers": modifiers,
                     "status": status,
                 })
 
@@ -655,19 +670,32 @@ with tab4:
             y="y",
             animation_frame="frame",
             animation_group="order_id",
-            color="order_type",
-            size="processing_time_min",
+            size="num_items",
+            color="num_modifiers",
+            color_continuous_scale="Plasma",
             hover_name="order_id",
-            hover_data=["processing_time_min", "status"],
+            hover_data=[
+                "processing_time_min",
+                "num_items",
+                "num_modifiers",
+                "status",
+            ],
             range_x=[0, 100],
             range_y=[0, 100],
-            title="Live Order Trajectory across Restaurant Floor",
+            title=(
+                f"Interactive Floor Plan Flow ({current_day} @ {current_hour}:00"
+                f" - {avg_emp} Staff On-Duty)"
+            ),
+            labels={
+                "num_items": "Item Count (Size)",
+                "num_modifiers": "Modifiers (Color)",
+            },
         )
 
         fig_sim.update_layout(
             xaxis=dict(showgrid=False, zeroline=False, visible=False),
             yaxis=dict(showgrid=False, zeroline=False, visible=False),
-            height=550,
+            height=580,
             shapes=[
                 dict(
                     type="rect",
@@ -717,7 +745,7 @@ with tab4:
                 dict(
                     x=50,
                     y=80,
-                    text="<b>2. Kitchen Prep</b>",
+                    text=f"<b>2. Kitchen Prep</b><br>👥 {avg_emp} Staff Active",
                     showarrow=False,
                     font=dict(size=12, color="darkorange"),
                 ),
