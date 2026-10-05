@@ -295,14 +295,12 @@ if filtered_df.empty:
 # ==============================================================================
 # 5. MULTI-VARIABLE ANALYTICS TABS
 # ==============================================================================
-tab1, tab2, tab3 = st.tabs(
-    [
-        "🌐 All-in-One Multi-Variable Views",
-        "📊 Pairwise Relationships & Heatmap",
-        "🤖 Statistical Drivers & Predictor",
-    ]
-)
-
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🌐 All-in-One Multi-Variable Views",
+    "📊 Pairwise Relationships & Heatmap",
+    "🤖 Statistical Drivers & Predictor",
+    "🏃 Restaurant Floor Simulation",
+])
 # ------------------------------------------------------------------------------
 # TAB 1: ALL-IN-ONE MULTI-VARIABLE VISUALIZATIONS
 # ------------------------------------------------------------------------------
