@@ -622,6 +622,7 @@ with tab4:
             order_id = str(row["id_x"])[:8]
             items = int(row["num_items"])
             modifiers = int(row["num_modifiers"])
+            order_type = str(row["orderType.label"])
 
             for f in range(num_frames):
                 progress = min(1.0, f * speed_factor * 3.0)
@@ -659,6 +660,7 @@ with tab4:
                     "processing_time_min": proc_time,
                     "num_items": items,
                     "num_modifiers": modifiers,
+                    "order_type": order_type,
                     "status": status,
                 })
 
@@ -673,11 +675,13 @@ with tab4:
             size="num_items",
             color="num_modifiers",
             color_continuous_scale="Plasma",
+            symbol="order_type",
             hover_name="order_id",
             hover_data=[
                 "processing_time_min",
                 "num_items",
                 "num_modifiers",
+                "order_type",
                 "status",
             ],
             range_x=[0, 100],
@@ -689,6 +693,7 @@ with tab4:
             labels={
                 "num_items": "Item Count (Size)",
                 "num_modifiers": "Modifiers (Color)",
+                "order_type": "Order Type (Shape)",
             },
         )
 
