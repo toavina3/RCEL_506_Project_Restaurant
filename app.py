@@ -60,7 +60,8 @@ def extract_counts(val):
 
 @st.cache_data(show_spinner=False)
 def load_and_preprocess_data(orders_url_or_path, shifts_url_or_path):
-    df1 = pd.read_csv(orders_url_or_path)
+    
+    df1 = pd.read_csv('https://github.com/user/repo/releases/download/v1.0/your_file.csv')
     df3 = pd.read_csv(shifts_url_or_path)
 
     df1["createdTime"] = pd.to_datetime(
