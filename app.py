@@ -59,26 +59,21 @@ def extract_counts(val):
 
 
 @st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def load_and_preprocess_data(orders_url_or_path, shifts_url_or_path):
-
-    # Specify only necessary columns to keep memory usage minimal
-    required_cols = ["id",
-        "createdTime",
-        "clientCreatedTime",
-        "modifiedTime",
-        "employee.id",
-        "employee.name",
-        "orderType.label",
-        "lineItems.elements",]
+    required_cols = [
+        "id", "createdTime", "clientCreatedTime", "modifiedTime",
+        "employee.id", "employee.name", "orderType.label", "lineItems.elements"
+    ]
     
     df1 = pd.read_csv(
         'https://github.com/toavina3/RCEL_506_Project_Restaurant/releases/download/v1.0/orders.csv',
         usecols=required_cols,
-        low_memory=False
+        engine='pyarrow',
+        dtype_backend='pyarrow'
     )
-
-    
     df3 = pd.read_csv(shifts_url_or_path)
+    return df1, df3
 
     df1["createdTime"] = pd.to_datetime(
         df1["createdTime"], unit="ms"
