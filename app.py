@@ -61,7 +61,8 @@ def parse_line_items(df_orders):
                             "item_revenue": price,
                         }
                     )
-        except Exception:
+        except Exception as e:
+            st.warning(f"Could not parse order {order_id}: {e}")
             continue
 
     df_items = pd.DataFrame(rows)
