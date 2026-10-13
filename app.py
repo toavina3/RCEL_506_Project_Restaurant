@@ -274,7 +274,8 @@ selected_wind_range = st.sidebar.slider(
 
 # Apply Filters
 filtered_df = df_merged[
-    (df_merged["hour"] == selected_hour)
+    (df_merged["hour"] >= selected_hour_range[0])
+    & (df_merged["hour"] <= selected_hour_range[1])
     & (df_merged["temperature_2m"] >= selected_temp_range[0])
     & (df_merged["temperature_2m"] <= selected_temp_range[1])
     & (df_merged["precipitation"] >= selected_precip_range[0])
@@ -289,7 +290,9 @@ if selected_day != "All Days":
     ]
 
 st.subheader(
-    f"Hourly Revenue per Category for Hour: {selected_hour}:00 ({selected_day})"
+    f"Revenue per Category from {selected_hour_range[0]}:00 "
+    f"to {selected_hour_range[1]}:00 ({selected_day})"
+)
 )
 
 # Metrics Summary
@@ -338,7 +341,10 @@ if not cat_summary.empty:
         x="Category",
         y="Total Revenue ($)",
         text_auto=".2f",
-        title=f"Total Revenue per Category at {selected_hour}:00",
+        title=(
+            f"Total Revenue per Category "
+            f"from {selected_hour_range[0]}:00 to {selected_hour_range[1]}:00"
+        ),
         color="Category",
     )
 
