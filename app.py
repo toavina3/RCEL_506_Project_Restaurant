@@ -1,3 +1,4 @@
+```python
 import json
 import pandas as pd
 import plotly.express as px
@@ -12,19 +13,6 @@ st.set_page_config(
 
 # Define required columns for line item parsing
 required_cols = ["id", "createdTime", "lineItems.elements"]
-data_url = "https://github.com/toavina3/RCEL_506_Project_Restaurant/releases/download/v1.0/orders.csv"
-
-# Load directly from URL with pyarrow engine
-@st.cache_data
-def load_data():
-    return pd.read_csv(
-        data_url,
-        usecols=required_cols,
-        engine="pyarrow",
-        dtype_backend="pyarrow",
-    )
-
-df1 = load_data()
 
 @st.cache_data
 def parse_line_items(df_orders):
@@ -92,7 +80,8 @@ def fetch_weather_data(start_date, end_date, lat=29.6914242, lon=-95.2193984):
         ],
         "timezone": "America/Chicago",
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
     data = response.json()
 
     df_weather = pd.DataFrame(data["hourly"])
@@ -116,6 +105,12 @@ else:
     st.info("Please upload your `orders.csv` file in the sidebar to begin.")
     st.stop()
 
+# Check required columns
+missing_cols = [col for col in required_cols if col not in df1.columns]
+if missing_cols:
+    st.error(f"Missing required columns: {missing_cols}")
+    st.stop()
+
 # Data Preparation & Timezone Conversion
 df1["createdTime"] = (
     pd.to_datetime(df1["createdTime"], unit="ms")
@@ -133,6 +128,7 @@ if df_items.empty:
     st.error("No valid line item revenue data could be parsed from the file.")
     st.stop()
 
+df_items["createdTime"] = pd.to_datetime(df_items["createdTime"])
 df_items["date"] = df_items["createdTime"].dt.date
 df_items["hour"] = df_items["createdTime"].dt.hour
 df_items["day_of_week"] = df_items["createdTime"].dt.day_name()
@@ -150,13 +146,21 @@ df_category_hourly = (
 start_date = df_items["date"].min()
 end_date = df_items["date"].max()
 
-with st.spinner("Fetching weather data for date range..."):
-    df_weather = fetch_weather_data(start_date, end_date)
+try:
+    with st.spinner("Fetching weather data for date range..."):
+        df_weather = fetch_weather_data(start_date, end_date)
+except (requests.RequestException, ValueError, KeyError) as e:
+    st.error(f"Unable to fetch weather data: {e}")
+    st.stop()
 
 # Merge Sales Data with Weather Data
 df_merged = pd.merge(
     df_category_hourly, df_weather, on=["date", "hour"], how="inner"
 )
+
+if df_merged.empty:
+    st.error("No matching sales and weather data found.")
+    st.stop()
 
 # Sidebar - Interactive Filters
 st.sidebar.header("2. Filter Parameters")
@@ -215,24 +219,12 @@ selected_wind_range = st.sidebar.slider(
 # Apply Filters
 filtered_df = df_merged[
     (df_merged["hour"] == selected_hour)
-    & (
-        df_merged["temperature_2m"] >= selected_temp_range[0]
-    )
-    & (
-        df_merged["temperature_2m"] <= selected_temp_range[1]
-    )
-    & (
-        df_merged["precipitation"] >= selected_precip_range[0]
-    )
-    & (
-        df_merged["precipitation"] <= selected_precip_range[1]
-    )
-    & (
-        df_merged["wind_speed_10m"] >= selected_wind_range[0]
-    )
-    & (
-        df_merged["wind_speed_10m"] <= selected_wind_range[1]
-    )
+    & (df_merged["temperature_2m"] >= selected_temp_range[0])
+    & (df_merged["temperature_2m"] <= selected_temp_range[1])
+    & (df_merged["precipitation"] >= selected_precip_range[0])
+    & (df_merged["precipitation"] <= selected_precip_range[1])
+    & (df_merged["wind_speed_10m"] >= selected_wind_range[0])
+    & (df_merged["wind_speed_10m"] <= selected_wind_range[1])
 ]
 
 if selected_day != "All Days":
@@ -248,7 +240,7 @@ col1, col2, col3, col4 = st.columns(4)
 total_filtered_rev = filtered_df["item_revenue"].sum()
 unique_dates_count = filtered_df["date"].nunique()
 avg_hourly_rev = (
-    (total_filtered_rev / unique_dates_count) if unique_dates_count > 0 else 0
+    total_filtered_rev / unique_dates_count if unique_dates_count > 0 else 0
 )
 
 col1.metric("Total Revenue", f"${total_filtered_rev:,.2f}")
@@ -304,3 +296,4 @@ else:
     st.warning(
         "No transactions found matching the selected weather and time filters."
     )
+```
