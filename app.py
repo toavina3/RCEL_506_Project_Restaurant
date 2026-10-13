@@ -33,9 +33,11 @@ def parse_line_items(df_orders):
                     item_name = item.get("name", "Unknown Item")
                     price = item.get("price", 0) / 100.0  # Convert cents to dollars
 
+                 
                     # Extract category if present in line item or item dictionary
                     category = "Uncategorized"
                     item_obj = item.get("item", {})
+                    
                     if isinstance(item_obj, dict) and "category" in item_obj:
                         cat_data = item_obj["category"]
                         if isinstance(cat_data, dict):
@@ -44,6 +46,11 @@ def parse_line_items(df_orders):
                             category = cat_data
                     elif "category" in item:
                         category = item["category"]
+                    
+                    # Classify by item name if category is missing
+                    if not category or category == "Uncategorized":
+                        category = categorize_item(item_name)
+
 
                     rows.append(
                         {
