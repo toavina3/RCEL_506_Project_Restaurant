@@ -1,4 +1,3 @@
-```python
 import json
 import pandas as pd
 import plotly.express as px
@@ -354,4 +353,3 @@ else:
     st.warning(
         "No transactions found matching the selected weather and time filters."
     )
-```
