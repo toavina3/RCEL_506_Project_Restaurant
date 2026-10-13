@@ -10,6 +10,21 @@ st.set_page_config(
     layout="wide",
 )
 
+# Define required columns for line item parsing
+required_cols = ["id", "createdTime", "lineItems.elements"]
+data_url = "https://github.com/toavina3/RCEL_506_Project_Restaurant/releases/download/v1.0/orders.csv"
+
+# Load directly from URL with pyarrow engine
+@st.cache_data
+def load_data():
+    return pd.read_csv(
+        data_url,
+        usecols=required_cols,
+        engine="pyarrow",
+        dtype_backend="pyarrow",
+    )
+
+df1 = load_data()
 
 @st.cache_data
 def parse_line_items(df_orders):
