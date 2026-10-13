@@ -293,7 +293,7 @@ st.subheader(
     f"Revenue per Category from {selected_hour_range[0]}:00 "
     f"to {selected_hour_range[1]}:00 ({selected_day})"
 )
-)
+
 
 # Metrics Summary
 col1, col2, col3, col4 = st.columns(4)
