@@ -235,8 +235,11 @@ day_options = [
 ]
 selected_day = st.sidebar.selectbox("Select Day of Week", day_options)
 
-selected_hour = st.sidebar.slider(
-    "Hour of Day", min_value=0, max_value=23, value=12
+selected_hour_range = st.sidebar.slider(
+    "Hour of Day",
+    min_value=0,
+    max_value=23,
+    value=(0, 23),
 )
 
 temp_min = float(df_merged["temperature_2m"].min())
